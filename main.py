@@ -88,16 +88,18 @@ def main():
     
     # Filtro por toma de contacto
     tomas_contacto = ['Todos'] + list(df['Toma de contacto'].unique())
-    toma_seleccionada = st.sidebar.selectbox(
+    toma_seleccionada = st.sidebar.multiselect(
         "Toma de contacto",
-        options=tomas_contacto
+        options=tomas_contacto,
+        default=[]
     )
     
     # Filtro por producto
     productos = ['Todos'] + list(df['Producto'].dropna().unique())
-    producto_seleccionado = st.sidebar.selectbox(
+    producto_seleccionado = st.sidebar.multiselect(
         "Producto",
-        options=productos
+        options=productos,
+        default=[]
     )
     
     # Aplicar filtros
@@ -106,11 +108,13 @@ def main():
         (df['Fecha de Creación'].dt.date <= fecha_fin)
     ]
     
-    if toma_seleccionada != 'Todos':
-        df_filtered = df_filtered[df_filtered['Toma de contacto'] == toma_seleccionada]
+    if toma_seleccionada:
+        #df_filtered = df_filtered[df_filtered['Toma de contacto'] == toma_seleccionada]
+        df_filtered = df_filtered[df_filtered['Toma de contacto'].isin(toma_seleccionada)]
     
-    if producto_seleccionado != 'Todos':
-        df_filtered = df_filtered[df_filtered['Producto'] == producto_seleccionado]
+    if producto_seleccionado:
+        #df_filtered = df_filtered[df_filtered['Producto'] == producto_seleccionado]
+        df_filtered = df_filtered[df_filtered['Toma de contacto'].isin(producto_seleccionado)]
     
     # Métricas principales
     st.header("📈 Métricas Principales")
@@ -146,22 +150,22 @@ def main():
     }).reset_index()
 
     monthly_data['Tasa_Conversion'] = (monthly_data['Convertido'] / monthly_data['Toma de contacto'] * 100)
-    monthly_data['Mes_Año_str'] = monthly_data['Mes_Año_Creacion'].astype(str)
+    monthly_data['Mes_Año'] = monthly_data['Mes_Año_Creacion'].astype(str)
 
     # Gráfico de barras para "Toma de contacto"
     fig_contact_bars = px.bar(
         monthly_data,
-        x='Mes_Año_str',
+        x='Mes_Año',
         y='Toma de contacto',
         title='Datos por Mes',
-        labels={'Toma de contacto': 'Número de Contactos'}
+        labels={'Toma de contacto': 'Número de Datos'}
     )
     st.plotly_chart(fig_contact_bars, use_container_width=True)
 
     # Gráfico de barras para "Convertido" (Ventas)
     fig_sales_bars = px.bar(
         monthly_data,
-        x='Mes_Año_str',
+        x='Mes_Año',
         y='Convertido',
         title='Ventas por Mes',
         labels={'Convertido': 'Número de Ventas'}
@@ -171,7 +175,7 @@ def main():
     # Gráfico de línea para "Tasa de Conversión"
     fig_conversion_line = px.line(
         monthly_data,
-        x='Mes_Año_str',
+        x='Mes_Año',
         y='Tasa_Conversion',
         title='Tasa de Conversión Mensual',
         markers=True,
